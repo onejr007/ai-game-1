@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from collections import defaultdict
+from filelock import FileLock
 
 app = FastAPI()
 app.add_middleware(
@@ -34,21 +35,25 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 USER_DATA_FILE = "datalogin.json"
 STATS_DATA_FILE = "datastatistik.json"
 
-# Fungsi untuk membaca data JSON dengan pengecekan otomatis
+# Fungsi untuk membaca data JSON dengan mekanisme Lock
 def read_json(file, default_data=None):
-    if not os.path.exists(file):
-        write_json(file, default_data if default_data is not None else {})
-    try:
-        with open(file, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        write_json(file, default_data if default_data is not None else {})
-        return default_data if default_data is not None else {}
+    lock = FileLock(file + ".lock")  # Buat file lock
+    with lock:  # Tunggu hingga file tersedia
+        if not os.path.exists(file):
+            write_json(file, default_data if default_data is not None else {})
+        try:
+            with open(file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            write_json(file, default_data if default_data is not None else {})
+            return default_data if default_data is not None else {}
 
-# Fungsi untuk menulis data ke JSON
+# Fungsi untuk menulis data ke JSON dengan mekanisme Lock
 def write_json(file, data):
-    with open(file, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    lock = FileLock(file + ".lock")  # Buat file lock
+    with lock:  # Tunggu hingga file tersedia
+        with open(file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
 
 # Fungsi untuk memastikan file JSON selalu ada
 def initialize_json_files():
