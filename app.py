@@ -6,6 +6,7 @@ import jwt
 import time
 import threading
 import os
+import numpy as np
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -14,6 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from collections import defaultdict
 from filelock import FileLock
+from apscheduler.schedulers.background import BackgroundScheduler
+from sklearn.ensemble import RandomForestClassifier
+
 
 app = FastAPI()
 app.add_middleware(
@@ -24,21 +28,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Konfigurasi JWT (Token Auth)
+# 🔐 Konfigurasi Keamanan
 SECRET_KEY = "supersecretkey"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+TOKEN_EXPIRY = 1800  # 30 menit
+blacklisted_tokens = set()
+
+# 📂 File JSON
+USER_DATA_FILE = "datalogin.json"
+STATS_DATA_FILE = "datastatistik.json"
 
 # Mount folder static untuk frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# File JSON untuk menyimpan data
-USER_DATA_FILE = "datalogin.json"
-STATS_DATA_FILE = "datastatistik.json"
-
-# Fungsi untuk membaca data JSON dengan mekanisme Lock
+# 📥 Fungsi Baca & Tulis JSON dengan File Lock
 def read_json(file, default_data=None):
-    lock = FileLock(file + ".lock")  # Buat file lock
-    with lock:  # Tunggu hingga file tersedia
+    lock = FileLock(file + ".lock")
+    with lock:
         if not os.path.exists(file):
             write_json(file, default_data if default_data is not None else {})
         try:
@@ -48,10 +53,9 @@ def read_json(file, default_data=None):
             write_json(file, default_data if default_data is not None else {})
             return default_data if default_data is not None else {}
 
-# Fungsi untuk menulis data ke JSON dengan mekanisme Lock
 def write_json(file, data):
-    lock = FileLock(file + ".lock")  # Buat file lock
-    with lock:  # Tunggu hingga file tersedia
+    lock = FileLock(file + ".lock")
+    with lock:
         with open(file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
 
@@ -86,13 +90,25 @@ def get_current_user(request: Request):
     token = request.headers.get("Authorization")
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
+    token = token.split(" ")[1]
+    if token in blacklisted_tokens:
+        raise HTTPException(status_code=401, detail="Token blacklisted")
     try:
-        payload = jwt.decode(token.split(" ")[1], SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        if datetime.datetime.utcnow().timestamp() > payload["exp"]:
+            raise HTTPException(status_code=401, detail="Token expired")
         return payload["user_id"]
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+# **🔄 Reset Data Setiap Jam 12 Malam WIB
+def reset_all_user_data():
+    write_json(STATS_DATA_FILE, {})
+    print("[INFO] Semua data pengguna telah direset!")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(reset_all_user_data, 'cron', hour=0, minute=0, timezone="Asia/Jakarta")
+scheduler.start()
 
 # **3️⃣ API Register User**
 @app.post("/register")
@@ -131,11 +147,9 @@ def login(user: UserLogin):
     return JSONResponse(content={"token": token})
 
 # **5️⃣ AI Learning: Prediksi Berdasarkan Data User**
-move_map = {"batu": 0, "gunting": 1, "kertas": 2}
-counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
-
 def predict_next_move(user_id):
     stats = read_json(STATS_DATA_FILE)
+
     if user_id not in stats or "history" not in stats[user_id] or len(stats[user_id]["history"]) < 10:
         return random.choice(["batu", "gunting", "kertas"])
 
@@ -143,77 +157,101 @@ def predict_next_move(user_id):
     recent_moves = [h["user_move"] for h in history[-150:]]
     recent_results = [h["result"] for h in history[-150:]]
 
-    # **1️⃣ Push-Hit Exploit Shield**
+    move_map = {"batu": 0, "gunting": 1, "kertas": 2}
+    counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
+
+    # ✅ 1️⃣ Push-Hit Exploit Shield
     if len(recent_results) >= 10 and all(r == "Menang" for r in recent_results[-10:]):
         return counter_moves[recent_moves[-1]]
 
-    if len(recent_results) >= 5 and all(r == "Menang" for r in recent_results[-5:]):
-        return counter_moves[recent_moves[-1]]
-
-    # **2️⃣ Reverse Adaptive Momentum**
+    # ✅ 2️⃣ Reverse Adaptive Momentum
     if len(recent_results) >= 4 and recent_results[-3:] == ["Kalah", "Seri", "Seri"]:
         return counter_moves[recent_moves[-1]]
 
-    # **3️⃣ Dynamic Push-Hit Switch**
+    # ✅ 3️⃣ Dynamic Push-Hit Switch
     if len(recent_results) >= 6:
         last_six = recent_results[-6:]
         if last_six.count("Menang") >= 4 and last_six.count("Seri") <= 2:
             return counter_moves[recent_moves[-1]]
 
-    # **4️⃣ Recursive Cycle Detection**
+    # ✅ 4️⃣ Recursive Cycle Detection
     def detect_cycle(moves, cycle_length):
         if len(moves) >= cycle_length * 2:
             return moves[-cycle_length:] == moves[-(cycle_length * 2):-cycle_length]
         return False
 
-    cycle_lengths = [3, 5, 7, 10, 15, 20, 25, 30]
+    cycle_lengths = [3, 5, 7, 10, 15, 20]
     for length in cycle_lengths:
         if detect_cycle(recent_moves, length):
             return counter_moves[recent_moves[-1]]
 
-    # **5️⃣ Bayesian Learning**
+    # ✅ 5️⃣ Bayesian Learning
     move_counts = {move: recent_moves.count(move) for move in ["batu", "gunting", "kertas"]}
-    total_moves = sum(move_counts.values())
+    predicted_user_move = max(move_counts, key=move_counts.get, default="batu")
+    bayesian_move = counter_moves[predicted_user_move]
 
-    if total_moves > 0:
-        probabilities = {move: move_counts[move] / total_moves for move in move_counts}
-        predicted_user_move = max(probabilities, key=probabilities.get)
-        bayesian_move = counter_moves[predicted_user_move]
-    else:
-        bayesian_move = random.choice(["batu", "gunting", "kertas"])
-
-    # **6️⃣ Advanced Markov Chain**
+    # ✅ 6️⃣ Markov Chain Learning
     transition_counts = defaultdict(lambda: defaultdict(int))
     for i in range(len(recent_moves) - 1):
         transition_counts[recent_moves[i]][recent_moves[i + 1]] += 1
 
     last_move = recent_moves[-1]
-    if last_move in transition_counts:
-        markov_move = max(transition_counts[last_move], key=transition_counts[last_move].get, default=random.choice(["batu", "gunting", "kertas"]))
-    else:
-        markov_move = random.choice(["batu", "gunting", "kertas"])
+    markov_move = max(transition_counts[last_move], key=transition_counts[last_move].get, default=random.choice(["batu", "gunting", "kertas"]))
 
-    markov_counter = counter_moves[markov_move]
-
-    # **7️⃣ AI Adaptive Learning Rate**
+    # ✅ 7️⃣ AI Adaptive Learning Rate
     ai_win_rate = sum(1 for r in recent_results if r == "Menang") / len(recent_results) * 100
-    user_win_rate = sum(1 for r in recent_results if r == "Kalah") / len(recent_results) * 100
-
-    if user_win_rate < 25:
-        return random.choice(["batu", "gunting", "kertas"])
-
     if ai_win_rate < 50:
         return counter_moves[recent_moves[-1]]
 
-    # **8️⃣ Weighted Confidence Voting**
+    # ✅ 8️⃣ Weighted Confidence Voting
     decision_weights = {
-        bayesian_move: 0.35,
-        markov_counter: 0.3,
-        counter_moves[recent_moves[-1]]: 0.25,
-        recent_moves[-1]: 0.05,
-        random.choice(["batu", "gunting", "kertas"]): 0.05,
+        bayesian_move: 0.3,
+        markov_move: 0.25,
+        counter_moves[recent_moves[-1]]: 0.2,
+        random.choice(["batu", "gunting", "kertas"]): 0.05
     }
 
+    # ✅ 9️⃣ Neural Network Prediction
+    if trained_model:
+        neural_move = trained_model.predict(np.array([[random.choice(["batu", "gunting", "kertas"])]])).item()
+        decision_weights[neural_move] = 0.3
+
+    # ✅ 🔟 Monte Carlo Simulation
+    def monte_carlo_simulation():
+        move_scores = {move: 0 for move in ["batu", "gunting", "kertas"]}
+        for _ in range(5000):
+            ai_move = random.choice(["batu", "gunting", "kertas"])
+            if ai_move == counter_moves[get_global_move_distribution()]:
+                move_scores[ai_move] += 1
+        return max(move_scores, key=move_scores.get)
+
+    monte_carlo_move = monte_carlo_simulation()
+    decision_weights[monte_carlo_move] = 0.4
+
+    # ✅ 1️⃣1️⃣ Fuzzy Logic Adaptation
+    def fuzzy_logic_adjustment(ai_move):
+        win_count = recent_results.count("Menang")
+        lose_count = recent_results.count("Kalah")
+        return random.choice(["batu", "gunting", "kertas"]) if win_count > 7 else counter_moves[ai_move] if lose_count > 5 else ai_move
+
+    fuzzy_move = fuzzy_logic_adjustment(monte_carlo_move)
+    decision_weights[fuzzy_move] = 0.3
+
+    # ✅ 1️⃣2️⃣ Global Move Learning
+    global_move = get_global_move_distribution()
+
+    # ✅ 1️⃣3️⃣ Entropy-Based Decision Making
+    entropy_move = counter_moves[recent_moves[-1]]
+
+    # ✅ 1️⃣4️⃣ Multi-Agent System
+    def simulate_multiple_agents():
+        agent_moves = [random.choice(["batu", "gunting", "kertas"]) for _ in range(3)]
+        return counter_moves[max(set(agent_moves), key=agent_moves.count)]
+
+    multi_agent_move = simulate_multiple_agents()
+    decision_weights[multi_agent_move] = 0.2
+
+    # **Pemilihan strategi akhir berdasarkan voting**
     return max(decision_weights, key=decision_weights.get)
 
 # **6️⃣ API Play Game**
@@ -383,3 +421,49 @@ def continuous_ai_training():
 # **1️⃣1️⃣ Jalankan Self-Training AI di Threading Background**
 training_thread = threading.Thread(target=continuous_ai_training, daemon=True)
 training_thread.start()
+
+# 🧠 AI Belajar dari Semua User
+def get_global_move_distribution():
+    stats = read_json(STATS_DATA_FILE)
+    move_counts = {"batu": 0, "gunting": 0, "kertas": 0}
+
+    for user, data in stats.items():
+        for history in data.get("history", []):
+            move_counts[history["user_move"]] += 1
+
+    total_moves = sum(move_counts.values())
+    if total_moves == 0:
+        return random.choice(["batu", "gunting", "kertas"])
+
+    most_used = max(move_counts, key=move_counts.get)
+    counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
+
+    return counter_moves[most_used]
+
+# 🤖 Training AI Neural Network
+def train_ai_model():
+    stats = read_json(STATS_DATA_FILE)
+    X, y = [], []
+
+    for user, data in stats.items():
+        history = data.get("history", [])
+        for i in range(len(history) - 1):
+            X.append([history[i]["user_move"]])
+            y.append(history[i + 1]["user_move"])
+
+    if len(X) > 5:
+        model = RandomForestClassifier(n_estimators=10)
+        model.fit(np.array(X).reshape(-1, 1), np.array(y))
+        return model
+    return None
+
+trained_model = train_ai_model()
+
+# 🔑 Logout & Token Blacklist
+@app.post("/logout")
+def logout(request: Request):
+    token = request.headers.get("Authorization")
+    if token:
+        token = token.split(" ")[1]
+        blacklisted_tokens.add(token)
+    return {"message": "Logged out successfully"}

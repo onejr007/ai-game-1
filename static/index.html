@@ -213,8 +213,21 @@
             });
         }
         function logout() {
-            localStorage.removeItem("token");
-            location.reload();
+            if (confirm("Apakah Anda yakin ingin keluar?")) {
+                $.ajax({
+                    url: "https://ai-game-1-production.up.railway.app/logout",
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
+                    success: function () {
+                        alert("Logout berhasil !");
+                        localStorage.removeItem("token");
+                        location.reload();
+                    },
+                    error: function () {
+                        alert("Gagal mereset statistik.");
+                    }
+                });
+            }
         }
         function resetStats() {
             if (confirm("Apakah Anda yakin ingin mereset statistik Anda?")) {
