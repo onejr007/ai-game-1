@@ -150,109 +150,315 @@ def login(user: UserLogin):
 def predict_next_move(user_id):
     stats = read_json(STATS_DATA_FILE)
 
-    if user_id not in stats or "history" not in stats[user_id] or len(stats[user_id]["history"]) < 10:
+    if user_id not in stats or "history" not in stats[user_id] or len(stats[user_id]["history"]) < 5:
         return random.choice(["batu", "gunting", "kertas"])
-
+    
     history = stats[user_id]["history"]
     recent_moves = [h["user_move"] for h in history[-150:]]
     recent_results = [h["result"] for h in history[-150:]]
+    timestamps = [h["timestamp"] for h in history[-150:]]
 
-    move_map = {"batu": 0, "gunting": 1, "kertas": 2}
     counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
 
-    # ✅ 1️⃣ Push-Hit Exploit Shield
-    if len(recent_results) >= 10 and all(r == "Menang" for r in recent_results[-10:]):
-        return counter_moves[recent_moves[-1]]
 
-    # ✅ 2️⃣ Reverse Adaptive Momentum
-    if len(recent_results) >= 4 and recent_results[-3:] == ["Kalah", "Seri", "Seri"]:
-        return counter_moves[recent_moves[-1]]
+    # ✅ 1️⃣ Pattern Recognition
+    def detect_pattern(moves, max_length=5):
+        for length in range(2, max_length + 1):
+            if len(moves) >= length * 2 and moves[-length:] == moves[-(length * 2):-length]:
+                return counter_moves[moves[-1]]
+        return None
+    pattern_move = detect_pattern(recent_moves)
 
-    # ✅ 3️⃣ Dynamic Push-Hit Switch
-    if len(recent_results) >= 6:
-        last_six = recent_results[-6:]
-        if last_six.count("Menang") >= 4 and last_six.count("Seri") <= 2:
-            return counter_moves[recent_moves[-1]]
-
-    # ✅ 4️⃣ Recursive Cycle Detection
-    def detect_cycle(moves, cycle_length):
-        if len(moves) >= cycle_length * 2:
-            return moves[-cycle_length:] == moves[-(cycle_length * 2):-cycle_length]
-        return False
-
-    cycle_lengths = [3, 5, 7, 10, 15, 20]
-    for length in cycle_lengths:
-        if detect_cycle(recent_moves, length):
-            return counter_moves[recent_moves[-1]]
-
-    # ✅ 5️⃣ Bayesian Learning
+    # ✅ 2️⃣ Bayesian Learning
     move_counts = {move: recent_moves.count(move) for move in ["batu", "gunting", "kertas"]}
-    predicted_user_move = max(move_counts, key=move_counts.get, default="batu")
-    bayesian_move = counter_moves[predicted_user_move]
+    bayesian_move = counter_moves[max(move_counts, key=move_counts.get)]
 
-    # ✅ 6️⃣ Markov Chain Learning
-    transition_counts = defaultdict(lambda: defaultdict(int))
-    for i in range(len(recent_moves) - 1):
-        transition_counts[recent_moves[i]][recent_moves[i + 1]] += 1
+    # ✅ 3️⃣ Markov Chain Learning
+    if len(recent_moves) >= 3:
+        transition_counts = defaultdict(lambda: defaultdict(int))
+        for i in range(len(recent_moves) - 1):
+            transition_counts[recent_moves[i]][recent_moves[i + 1]] += 1
+        last_move = recent_moves[-1]
+        markov_move = counter_moves[max(transition_counts[last_move], key=transition_counts[last_move].get, default=random.choice(["batu", "gunting", "kertas"]))]
+    else:
+        markov_move = None
 
-    last_move = recent_moves[-1]
-    markov_move = max(transition_counts[last_move], key=transition_counts[last_move].get, default=random.choice(["batu", "gunting", "kertas"]))
-
-    # ✅ 7️⃣ AI Adaptive Learning Rate
-    ai_win_rate = sum(1 for r in recent_results if r == "Menang") / len(recent_results) * 100
-    if ai_win_rate < 50:
-        return counter_moves[recent_moves[-1]]
-
-    # ✅ 8️⃣ Weighted Confidence Voting
-    decision_weights = {
-        bayesian_move: 0.3,
-        markov_move: 0.25,
-        counter_moves[recent_moves[-1]]: 0.2,
-        random.choice(["batu", "gunting", "kertas"]): 0.05
-    }
-
-    # ✅ 9️⃣ Neural Network Prediction
-    if trained_model:
-        neural_move = trained_model.predict(np.array([[random.choice(["batu", "gunting", "kertas"])]])).item()
-        decision_weights[neural_move] = 0.3
-
-    # ✅ 🔟 Monte Carlo Simulation
+    # ✅ 4️⃣ Monte Carlo + Dynamic Simulation
     def monte_carlo_simulation():
         move_scores = {move: 0 for move in ["batu", "gunting", "kertas"]}
         for _ in range(5000):
             ai_move = random.choice(["batu", "gunting", "kertas"])
-            if ai_move == counter_moves[get_global_move_distribution()]:
+            if ai_move == counter_moves[bayesian_move]:
                 move_scores[ai_move] += 1
         return max(move_scores, key=move_scores.get)
-
     monte_carlo_move = monte_carlo_simulation()
-    decision_weights[monte_carlo_move] = 0.4
 
-    # ✅ 1️⃣1️⃣ Fuzzy Logic Adaptation
-    def fuzzy_logic_adjustment(ai_move):
-        win_count = recent_results.count("Menang")
-        lose_count = recent_results.count("Kalah")
-        return random.choice(["batu", "gunting", "kertas"]) if win_count > 7 else counter_moves[ai_move] if lose_count > 5 else ai_move
+    # ✅ 5️⃣ Time-Based Pattern Recognition
+    def filter_recent_moves(history, time_window=300):
+        current_time = time.time()
+        return [move for i, move in enumerate(history) if timestamps[i] >= current_time - time_window]
+    time_based_move = detect_pattern(filter_recent_moves(recent_moves))
 
-    fuzzy_move = fuzzy_logic_adjustment(monte_carlo_move)
-    decision_weights[fuzzy_move] = 0.3
+    # ✅ 6️⃣ Game-Theoretic Equilibrium
+    equilibrium_move = counter_moves[random.choice(["batu", "gunting", "kertas"])]
 
-    # ✅ 1️⃣2️⃣ Global Move Learning
-    global_move = get_global_move_distribution()
+    # ✅ 7️⃣ Bayesian Neural Estimation
+    def bayesian_neural_prediction():
+        transition_matrix = np.zeros((3, 3))
+        move_map = {"batu": 0, "gunting": 1, "kertas": 2}
 
-    # ✅ 1️⃣3️⃣ Entropy-Based Decision Making
-    entropy_move = counter_moves[recent_moves[-1]]
+        for i in range(len(recent_moves) - 1):
+            prev_move = move_map[recent_moves[i]]
+            next_move = move_map[recent_moves[i + 1]]
+            transition_matrix[prev_move][next_move] += 1
 
-    # ✅ 1️⃣4️⃣ Multi-Agent System
-    def simulate_multiple_agents():
-        agent_moves = [random.choice(["batu", "gunting", "kertas"]) for _ in range(3)]
-        return counter_moves[max(set(agent_moves), key=agent_moves.count)]
+        probabilities = transition_matrix / (np.sum(transition_matrix, axis=1, keepdims=True) + 1e-9)
+        predicted_move = np.argmax(probabilities[move_map[recent_moves[-1]]])
 
-    multi_agent_move = simulate_multiple_agents()
-    decision_weights[multi_agent_move] = 0.2
+        return counter_moves[list(move_map.keys())[predicted_move]]
+    neural_move = bayesian_neural_prediction()
 
-    # **Pemilihan strategi akhir berdasarkan voting**
-    return max(decision_weights, key=decision_weights.get)
+    # ✅ 8️⃣ Multi-Tier Voting System
+    def multi_tier_voting():
+        short_term = recent_moves[-5:] if len(recent_moves) >= 5 else recent_moves
+        mid_term = recent_moves[-20:] if len(recent_moves) >= 20 else recent_moves
+        long_term = recent_moves
+
+        tier_1 = counter_moves[max(set(short_term), key=short_term.count)]
+        tier_2 = counter_moves[max(set(mid_term), key=mid_term.count)]
+        tier_3 = counter_moves[max(set(long_term), key=long_term.count)]
+
+        return random.choice([tier_1, tier_2, tier_3])
+    tiered_move = multi_tier_voting()
+
+    # ✅ 9️⃣ Reverse Exploit Strategy
+    if len(recent_moves) >= 2 and recent_moves[-2] == counter_moves[recent_moves[-1]]:
+        reverse_exploit = counter_moves[recent_moves[-1]]
+    else:
+        reverse_exploit = None
+
+    # ✅ 🔟 Anti-Mirror Strategy
+    if len(recent_moves) >= 2 and recent_moves[-2] == counter_moves[recent_moves[-1]]:
+        anti_mirror = counter_moves[recent_moves[-1]]
+    else:
+        anti_mirror = None
+
+    # ✅ 1️⃣1️⃣ Streak-Based Prediction
+    if len(recent_results) >= 5:
+        win_streak = recent_results[-5:].count("Menang")
+        lose_streak = recent_results[-5:].count("Kalah")
+
+        if win_streak >= 4:
+            streak_prediction = counter_moves[recent_moves[-1]]
+        elif lose_streak >= 4:
+            streak_prediction = random.choice(["batu", "gunting", "kertas"])
+        else:
+            streak_prediction = None
+    else:
+        streak_prediction = None
+
+    # ✅ 1️⃣2️⃣ Look-Ahead Simulation
+    def look_ahead_simulation():
+        simulated_moves = [counter_moves[recent_moves[-1]]]
+        for _ in range(2):
+            simulated_moves.append(counter_moves[simulated_moves[-1]])
+        return simulated_moves[-1]
+    look_ahead = look_ahead_simulation()
+
+    # ✅ 1️⃣3️⃣ Psychological Counterplay
+    if len(recent_results) >= 6 and recent_results[-6:].count("Menang") >= 4:
+        psychological_counter = counter_moves[recent_moves[-1]]
+    else:
+        psychological_counter = None
+
+    # ✅ 1️⃣4️⃣ Hybrid AI Switching
+    if len(recent_results) >= 10:
+        win_rate = recent_results[-10:].count("Menang") / 10
+        if win_rate < 0.4:
+            hybrid_switch = counter_moves[recent_moves[-1]]
+        else:
+            hybrid_switch = random.choice(["batu", "gunting", "kertas"])
+    else:
+        hybrid_switch = None
+
+    # ✅ 1️⃣5️⃣ Opponent Conditioning
+    if len(recent_results) >= 6 and recent_results[-6:].count("Kalah") >= 4:
+        conditioning = counter_moves[recent_moves[-1]]
+    else:
+        conditioning = None
+
+    # ✅ 1️⃣6️⃣ Dynamic Response Adjustment
+    if len(recent_results) >= 8:
+        recent_win_rate = recent_results[-8:].count("Menang") / 8
+        if recent_win_rate < 0.5:
+            dynamic_response = counter_moves[recent_moves[-1]]
+        else:
+            dynamic_response = random.choice(["batu", "gunting", "kertas"])
+    else:
+        dynamic_response = None
+
+    # ✅ 1️⃣7️⃣ Entropy-Based Decision Making
+    if len(recent_moves) >= 5:
+        move_distribution = {move: recent_moves[-5:].count(move) for move in ["batu", "gunting", "kertas"]}
+        most_common_move = max(move_distribution, key=move_distribution.get)
+        entropy_move = counter_moves[most_common_move]
+    else:
+        entropy_move = None
+
+    # ✅ 1️⃣8️⃣ Gradient Learning Strategy
+    if len(recent_moves) >= 6:
+        recent_trend = [move for move in recent_moves[-6:]]
+        if recent_trend == ["batu", "gunting", "kertas", "batu", "gunting", "kertas"]:
+            gradient_learning = counter_moves[recent_moves[-1]]
+        else:
+            gradient_learning = None
+    else:
+        gradient_learning = None
+
+    # ✅ 1️⃣9️⃣ Reinforcement Learning Adaptation
+    if len(recent_results) >= 10:
+        ai_win_rate = recent_results[-10:].count("Menang") / 10
+        if ai_win_rate < 0.4:
+            reinforcement_learning = counter_moves[recent_moves[-1]]
+        else:
+            reinforcement_learning = random.choice(["batu", "gunting", "kertas"])
+    else:
+        reinforcement_learning = None
+
+    # ✅ 2️⃣0️⃣ Exploration vs. Exploitation
+    if len(recent_results) >= 10:
+        ai_win_rate = recent_results[-10:].count("Menang") / 10
+        if ai_win_rate < 0.5:
+            exploration_exploitation = counter_moves[recent_moves[-1]]
+        else:
+            exploration_exploitation = random.choice(["batu", "gunting", "kertas"])
+    else:
+        exploration_exploitation = None
+
+    # ✅ 2️⃣1️⃣ Neural Network-Based Decision Making
+    if trained_model:
+        input_data = np.array([[recent_moves.count("batu"), recent_moves.count("gunting"), recent_moves.count("kertas")]])
+        predicted_move = trained_model.predict(input_data).item()
+        neural_network_move = counter_moves[predicted_move]
+    else:
+        neural_network_move = None
+
+    # ✅ 2️⃣2️⃣ Recursive Bayesian Updating
+    if len(recent_moves) >= 5:
+        move_probs = {move: (recent_moves[-5:].count(move) + 1) / 6 for move in ["batu", "gunting", "kertas"]}
+        predicted_move = max(move_probs, key=move_probs.get)
+        recursive_bayesian = counter_moves[predicted_move]
+    else:
+        recursive_bayesian = None
+
+    # ✅ 2️⃣3️⃣ Look-Back Analysis
+    if len(recent_moves) >= 10:
+        most_frequent_move = max(set(recent_moves[-10:]), key=recent_moves[-10:].count)
+        look_back_analysis = counter_moves[most_frequent_move]
+    else:
+        look_back_analysis = None
+
+    # ✅ 2️⃣4️⃣ Delayed Counter Strategy
+    if len(recent_moves) >= 4:
+        delayed_counter = counter_moves[recent_moves[-4]]
+    else:
+        delayed_counter = None
+
+    # ✅ 2️⃣5️⃣ Move Distribution Analysis
+    if len(recent_moves) >= 10:
+        move_distribution = {move: recent_moves.count(move) / len(recent_moves) for move in ["batu", "gunting", "kertas"]}
+        predicted_move = max(move_distribution, key=move_distribution.get)
+        move_distribution_analysis = counter_moves[predicted_move]
+    else:
+        move_distribution_analysis = None
+
+    # ✅ 2️⃣6️⃣ Weighted Random Selection
+    if len(recent_moves) >= 5:
+        move_weights = {move: recent_moves[-5:].count(move) + 1 for move in ["batu", "gunting", "kertas"]}
+        weighted_choices = random.choices(list(move_weights.keys()), weights=move_weights.values(), k=1)
+        weighted_random_selection = counter_moves[weighted_choices[0]]
+    else:
+        weighted_random_selection = None
+
+    # ✅ 2️⃣7️⃣ Meta-Learning Strategy
+    if len(recent_results) >= 15:
+        win_rate = recent_results[-15:].count("Menang") / 15
+        if win_rate < 0.4:
+            meta_learning = counter_moves[recent_moves[-1]]
+        else:
+            meta_learning = random.choice(["batu", "gunting", "kertas"])
+    else:
+        meta_learning = None
+
+    # ✅ 2️⃣8️⃣ Adaptive Randomization
+    if random.random() < 0.2:
+        adaptive_randomization = random.choice(["batu", "gunting", "kertas"])
+    else:
+        adaptive_randomization = None
+
+    # ✅ 2️⃣9️⃣ Probability Curve Prediction
+    if len(recent_moves) >= 10:
+        move_probabilities = {move: (recent_moves.count(move) + 1) / (len(recent_moves) + 3) for move in ["batu", "gunting", "kertas"]}
+        predicted_move = max(move_probabilities, key=move_probabilities.get)
+        probability_curve_prediction = counter_moves[predicted_move]
+    else:
+        probability_curve_prediction = None
+
+    # ✅ 3️⃣0️⃣ AI Self-Optimization
+    if len(recent_results) >= 20:
+        ai_win_rate = recent_results[-20:].count("Menang") / 20
+        if ai_win_rate < 0.5:
+            ai_self_optimization = counter_moves[recent_moves[-1]]
+        else:
+            ai_self_optimization = random.choice(["batu", "gunting", "kertas"])
+    else:
+        ai_self_optimization = None
+
+    # 🔥 Mengumpulkan semua strategi yang memiliki nilai
+    active_strategies = {
+        "pattern_move": pattern_move,
+        "bayesian_move": bayesian_move,
+        "markov_move": markov_move,
+        "monte_carlo_move": monte_carlo_move,
+        "time_based_move": time_based_move,
+        "equilibrium_move": equilibrium_move,
+        "neural_move": neural_network_move,
+        "tiered_move": tiered_move,
+        "reverse_exploit": reverse_exploit,
+        "anti_mirror": anti_mirror,
+        "streak_prediction": streak_prediction,
+        "look_ahead": look_ahead,
+        "psychological_counter": psychological_counter,
+        "hybrid_switch": hybrid_switch,
+        "conditioning": conditioning,
+        "dynamic_response": dynamic_response,
+        "entropy_move": entropy_move,
+        "gradient_learning": gradient_learning,
+        "reinforcement_learning": reinforcement_learning,
+        "exploration_exploitation": exploration_exploitation,
+        "recursive_bayesian": recursive_bayesian,
+        "look_back_analysis": look_back_analysis,
+        "delayed_counter": delayed_counter,
+        "move_distribution_analysis": move_distribution_analysis,
+        "weighted_random_selection": weighted_random_selection,
+        "meta_learning": meta_learning,
+        "adaptive_randomization": adaptive_randomization,
+        "probability_curve_prediction": probability_curve_prediction,
+        "ai_self_optimization": ai_self_optimization
+    }
+
+    # 🔥 Menghapus strategi yang bernilai None
+    active_strategies = {key: value for key, value in active_strategies.items() if value is not None}
+
+    # 🔥 Jika ada strategi yang aktif, gunakan voting berbobot
+    if active_strategies:
+        strategy_weights = {key: 1 for key in active_strategies}  # Memberikan bobot awal yang sama
+        chosen_strategy = max(active_strategies, key=lambda k: strategy_weights[k])
+        return active_strategies[chosen_strategy]
+
+    # 🔥 Jika tidak ada strategi yang aktif, AI memilih secara acak
+    return random.choice(["batu", "gunting", "kertas"])
+
 
 # **6️⃣ API Play Game**
 @app.post("/play")
