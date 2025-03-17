@@ -1,0 +1,1466 @@
+{
+    "user@example.com": {
+        "total_games": 0,
+        "total_wins": 0,
+        "total_losses": 0,
+        "total_draws": 0,
+        "score": 0,
+        "win_streak": 0,
+        "history": []
+    },
+    "AI_vs_AI": {
+        "total_games": 289,
+        "total_wins": 94,
+        "total_losses": 95,
+        "total_draws": 100,
+        "score": 94,
+        "win_streak": 1,
+        "history": [
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "batu",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "batu",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "kertas",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "batu",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "kertas",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "gunting",
+                "result": "Kalah"
+            },
+            {
+                "ai1_move": "kertas",
+                "ai2_move": "kertas",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "gunting",
+                "ai2_move": "gunting",
+                "result": "Seri"
+            },
+            {
+                "ai1_move": "batu",
+                "ai2_move": "gunting",
+                "result": "Menang"
+            }
+        ]
+    }
+}
