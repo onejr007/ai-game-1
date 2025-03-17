@@ -132,7 +132,7 @@
             let username = $("#username").val();
             let password = $("#password").val();
 
-            fetch("http://127.0.0.1:8000/register", {
+            fetch("https://ai-game-1-production.up.railway.app/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: username, password: password })
@@ -151,7 +151,7 @@
             let username = $("#username").val();
             let password = $("#password").val();
 
-            fetch("http://127.0.0.1:8000/login", {
+            fetch("https://ai-game-1-production.up.railway.app/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: username, password: password })
@@ -175,7 +175,7 @@
             updateLeaderboard();
         }
         function updateLeaderboard() {
-            $.get("http://127.0.0.1:8000/leaderboard", function (data) {
+            $.get("https://ai-game-1-production.up.railway.app/leaderboard", function (data) {
                 let rows = "";
                 data.leaderboard.forEach((user) => {
                     rows += `<tr>
@@ -189,7 +189,7 @@
             });
         }
         function updateAIStats() {
-            $.get("http://127.0.0.1:8000/ai_stats", function (data) {
+            $.get("https://ai-game-1-production.up.railway.app/ai_stats", function (data) {
                 $("#ai-stats").html(`
                     <tr><td>Total Pemain:</td><td>${data.total_users}</td></tr>
                     <tr><td>Total Game:</td><td>${data.total_games}</td></tr>
@@ -206,7 +206,7 @@
         function resetStats() {
             if (confirm("Apakah Anda yakin ingin mereset statistik Anda?")) {
                 $.ajax({
-                    url: "http://127.0.0.1:8000/reset_stats",
+                    url: "https://ai-game-1-production.up.railway.app/reset_stats",
                     method: "POST",
                     headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
                     success: function () {
@@ -221,7 +221,7 @@
         }
         function playGame(choice) {
             $.ajax({
-                url: "http://127.0.0.1:8000/play?user_choice=" + choice,
+                url: "https://ai-game-1-production.up.railway.app/play?user_choice=" + choice,
                 method: "POST",
                 headers: { "Authorization": "Bearer " + localStorage.getItem("token") },
                 success: function (data) {
