@@ -1,2 +1,4 @@
 -e "env/\nvenv/" 
 env/ 
+datalogin.json
+datastatistik.json 
