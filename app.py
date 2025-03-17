@@ -156,7 +156,8 @@ def predict_next_move(user_id):
     history = stats[user_id]["history"]
     recent_moves = [h["user_move"] for h in history[-150:]]
     recent_results = [h["result"] for h in history[-150:]]
-    timestamps = [h["timestamp"] for h in history[-150:] if "timestamp" in h]  # ✅ FIXED
+    timestamps = [h.get("timestamp", 0) for h in history[-150:]]  # ✅ FIXED
+
 
     counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
 
