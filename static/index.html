@@ -44,6 +44,17 @@
         .hidden {
             display: none!important;
         }
+        .scrollable-tbody {
+            max-height: 200px; /* Batasi tinggi tbody */
+            overflow-y: auto;
+            display: block;
+        }
+
+        .scrollable-tbody table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
     </style>
 </head>
 <body>
@@ -83,9 +94,11 @@
                         <th>Win Rate (%)</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboard">
-                    <!-- Data leaderboard akan diisi otomatis -->
-                </tbody>
+                <div class="scrollable-tbody">
+                    <tbody id="leaderboard">
+                        <!-- Data leaderboard akan diisi otomatis -->
+                    </tbody>
+                </div>
             </table>
         </div>
     </div>
