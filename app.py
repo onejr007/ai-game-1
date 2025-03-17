@@ -433,9 +433,29 @@ def predict_next_move(user_id):
     else:
         meta_prediction = None
 
+    # ✅ 3️⃣3️⃣ Infinite Cycle Detection
+    def detect_infinite_cycle(moves, cycle_length=3):
+        if len(moves) >= cycle_length * 4:  # Pastikan ada cukup data untuk mendeteksi pola panjang
+            last_cycles = [moves[-(cycle_length * i): -(cycle_length * (i - 1))] for i in range(1, 4)]
+            if all(cycle == last_cycles[0] for cycle in last_cycles):
+                return counter_moves[moves[-1]]  # AI langsung memutus pola yang terus berulang
+        return None
+    infinite_cycle_move = detect_infinite_cycle(recent_moves)
+
+    # ✅ 3️⃣4️⃣ Cycle Breaker Strategy
+    if len(recent_moves) >= 9:  # Pastikan ada cukup data
+        if recent_moves[-9:] == recent_moves[-18:-9]:  # Jika 9 langkah terakhir sama dengan sebelumnya
+            cycle_breaker = counter_moves[recent_moves[-1]]  # AI memutus pola
+        else:
+            cycle_breaker = None
+    else:
+        cycle_breaker = None
+
     # 🔥 Mengumpulkan semua strategi yang memiliki nilai
     active_strategies = {
         "pattern_move": pattern_move,
+        "infinite_cycle_move": infinite_cycle_move,
+        "cycle_breaker": cycle_breaker,
         "advanced_cycle_disruption": advanced_cycle_disruption,
         "meta_prediction": meta_prediction,
         "bayesian_move": bayesian_move,
@@ -468,10 +488,17 @@ def predict_next_move(user_id):
         "ai_self_optimization": ai_self_optimization
     }
 
-    # 🔥 Menghapus strategi yang bernilai None
+    # 🔥 Hapus strategi yang bernilai None
     active_strategies = {key: value for key, value in active_strategies.items() if value is not None}
 
+    # 🔥 Debugging: Tampilkan strategi yang tersedia
+    print(f"🔍 [DEBUG] Strategi Aktif: {list(active_strategies.keys())}")
+
     # 🔥 Jika ada strategi anti-siklik, AI akan langsung menggunakannya
+    if "infinite_cycle_move" in active_strategies:
+        return active_strategies["infinite_cycle_move"]
+    if "cycle_breaker" in active_strategies:
+        return active_strategies["cycle_breaker"]
     if "advanced_cycle_disruption" in active_strategies:
         return active_strategies["advanced_cycle_disruption"]
     if "meta_prediction" in active_strategies:
