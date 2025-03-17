@@ -448,8 +448,10 @@ def train_ai_model():
     for user, data in stats.items():
         history = data.get("history", [])
         for i in range(len(history) - 1):
-            X.append([history[i]["user_move"]])
-            y.append(history[i + 1]["user_move"])
+            # **Cek apakah 'user_move' ada dalam history**
+            if "user_move" in history[i] and "user_move" in history[i + 1]:
+                X.append([history[i]["user_move"]])
+                y.append(history[i + 1]["user_move"])
 
     if len(X) > 5:
         model = RandomForestClassifier(n_estimators=10)
