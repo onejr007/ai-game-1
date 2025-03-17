@@ -270,14 +270,27 @@ def play(request: Request, user_choice: str, current_user: str = Depends(get_cur
 
     stats = read_json(STATS_DATA_FILE)
 
-    # **Pastikan user memiliki statistik jika belum ada**
+    # ✅ Pastikan user memiliki entri statistik jika belum ada
     if current_user not in stats:
         stats[current_user] = {
             "total_games": 0, "total_wins": 0, "total_losses": 0, "total_draws": 0,
             "score": 0, "win_streak": 0, "history": []
         }
 
-    # **Update statistik berdasarkan hasil permainan**
+    # ✅ Pastikan history selalu dalam format yang benar
+    game_record = {
+        "user_move": user_choice,
+        "ai_move": ai_choice,
+        "result": result
+    }
+    
+    # ✅ Tambahkan history jika format benar
+    if "history" in stats[current_user] and isinstance(stats[current_user]["history"], list):
+        stats[current_user]["history"].append(game_record)
+    else:
+        stats[current_user]["history"] = [game_record]  # Perbaiki jika history tidak ada atau format salah
+
+    # ✅ Update statistik user
     stats[current_user]["total_games"] += 1
     if result == "Menang":
         stats[current_user]["total_wins"] += 1
@@ -288,13 +301,6 @@ def play(request: Request, user_choice: str, current_user: str = Depends(get_cur
         stats[current_user]["win_streak"] = 0
     else:
         stats[current_user]["total_draws"] += 1
-
-    # **Tambahkan history permainan**
-    stats[current_user]["history"].append({
-        "user_move": user_choice,
-        "ai_move": ai_choice,
-        "result": result
-    })
 
     write_json(STATS_DATA_FILE, stats)
 
@@ -469,3 +475,31 @@ def logout(request: Request):
         token = token.split(" ")[1]
         blacklisted_tokens.add(token)
     return {"message": "Logged out successfully"}
+
+def fix_broken_history():
+    stats = read_json(STATS_DATA_FILE)
+    for user, data in stats.items():
+        if "history" in data and isinstance(data["history"], list):
+            fixed_history = []
+            for record in data["history"]:
+                if "user_move" in record and "ai_move" in record and "result" in record:
+                    fixed_history.append(record)  # Hanya simpan data yang valid
+            
+            stats[user]["history"] = fixed_history  # Perbaiki history user
+
+    write_json(STATS_DATA_FILE, stats)
+    print("[INFO] Semua data history yang rusak telah diperbaiki!")
+
+fix_broken_history()
+
+def debug_stats_data():
+    stats = read_json(STATS_DATA_FILE)
+    for user, data in stats.items():
+        if "history" not in data or not isinstance(data["history"], list):
+            print(f"[ERROR] User: {user} tidak memiliki history yang benar: {data}")
+        else:
+            for i, record in enumerate(data["history"]):
+                if "user_move" not in record or "ai_move" not in record or "result" not in record:
+                    print(f"[ERROR] User: {user}, History Index: {i}, Data: {record}")
+
+debug_stats_data()
