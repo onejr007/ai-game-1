@@ -162,8 +162,8 @@ def predict_next_move(user_id):
     counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
 
 
-    # ✅ 1️⃣ Pattern Recognition
-    def detect_pattern(moves, max_length=5):
+    # ✅ 1️⃣ Pattern Recognition (Ditingkatkan)
+    def detect_pattern(moves, max_length=10):  # 🔥 Naikkan max_length ke 10
         for length in range(2, max_length + 1):
             if len(moves) >= length * 2 and moves[-length:] == moves[-(length * 2):-length]:
                 return counter_moves[moves[-1]]
@@ -415,9 +415,18 @@ def predict_next_move(user_id):
     else:
         ai_self_optimization = None
 
+    # ✅ 3️⃣1️⃣ Cycle Disruption Strategy (Strategi Baru)
+    def detect_cycle(moves):
+        if len(moves) >= 6:
+            if moves[-3:] == ["batu", "gunting", "kertas"] or moves[-3:] == ["gunting", "kertas", "batu"] or moves[-3:] == ["kertas", "batu", "gunting"]:
+                return counter_moves[moves[-1]]  # 🔥 AI memutus siklus
+        return None
+    cycle_disruption = detect_cycle(recent_moves)
+
     # 🔥 Mengumpulkan semua strategi yang memiliki nilai
     active_strategies = {
         "pattern_move": pattern_move,
+        "cycle_disruption": cycle_disruption,
         "bayesian_move": bayesian_move,
         "markov_move": markov_move,
         "monte_carlo_move": monte_carlo_move,
@@ -451,13 +460,17 @@ def predict_next_move(user_id):
     # 🔥 Menghapus strategi yang bernilai None
     active_strategies = {key: value for key, value in active_strategies.items() if value is not None}
 
-    # 🔥 Jika ada strategi yang aktif, gunakan voting berbobot
+    # 🔥 Prioritaskan strategi anti-siklik jika aktif
+    if "cycle_disruption" in active_strategies:
+        return active_strategies["cycle_disruption"]
+
+    # 🔥 Jika ada strategi lain yang aktif, gunakan voting berbobot
     if active_strategies:
-        strategy_weights = {key: 1 for key in active_strategies}  # Memberikan bobot awal yang sama
+        strategy_weights = {key: 1 for key in active_strategies}
         chosen_strategy = max(active_strategies, key=lambda k: strategy_weights[k])
         return active_strategies[chosen_strategy]
 
-    # 🔥 Jika tidak ada strategi yang aktif, AI memilih secara acak
+    # 🔥 Jika tidak ada strategi aktif, AI memilih secara acak
     return random.choice(["batu", "gunting", "kertas"])
 
 
