@@ -163,8 +163,8 @@ def predict_next_move(user_id):
 
 
     # ✅ 1️⃣ Pattern Recognition (Ditingkatkan)
-    def detect_pattern(moves, max_length=10):  # 🔥 Naikkan max_length ke 10
-        for length in range(2, max_length + 1):
+    def detect_pattern(moves, max_length=15):  # 🔥 Bisa mendeteksi pola hingga 15 langkah
+        for length in range(3, max_length + 1):  
             if len(moves) >= length * 2 and moves[-length:] == moves[-(length * 2):-length]:
                 return counter_moves[moves[-1]]
         return None
@@ -415,18 +415,29 @@ def predict_next_move(user_id):
     else:
         ai_self_optimization = None
 
-    # ✅ 3️⃣1️⃣ Cycle Disruption Strategy (Strategi Baru)
-    def detect_cycle(moves):
-        if len(moves) >= 6:
-            if moves[-3:] == ["batu", "gunting", "kertas"] or moves[-3:] == ["gunting", "kertas", "batu"] or moves[-3:] == ["kertas", "batu", "gunting"]:
-                return counter_moves[moves[-1]]  # 🔥 AI memutus siklus
+    # ✅ 3️⃣1️⃣ Advanced Cycle Disruption (Strategi Baru)
+    def detect_advanced_cycle(moves):
+        cycle_lengths = [3, 4, 5, 6]  # 🔥 Coba deteksi siklus dengan berbagai panjang
+        for length in cycle_lengths:
+            if len(moves) >= length * 3:  # 🔥 Pastikan ada cukup data untuk mendeteksi pola
+                if moves[-length:] == moves[-(2 * length):-length] == moves[-(3 * length):-(2 * length)]:
+                    return counter_moves[moves[-1]]  # 🔥 AI memutus siklus dengan memilih counter
         return None
-    cycle_disruption = detect_cycle(recent_moves)
+    advanced_cycle_disruption = detect_advanced_cycle(recent_moves)
+    
+    # ✅ 3️⃣2️⃣ Meta-Prediction Strategy (Strategi Baru)
+    if len(recent_moves) >= 20:
+        last_10_moves = recent_moves[-10:]  # 🔥 Lihat 10 langkah terakhir user
+        most_frequent_move = max(set(last_10_moves), key=last_10_moves.count)
+        meta_prediction = counter_moves[most_frequent_move]  # 🔥 Counter langkah yang paling sering dipakai
+    else:
+        meta_prediction = None
 
     # 🔥 Mengumpulkan semua strategi yang memiliki nilai
     active_strategies = {
         "pattern_move": pattern_move,
-        "cycle_disruption": cycle_disruption,
+        "advanced_cycle_disruption": advanced_cycle_disruption,
+        "meta_prediction": meta_prediction,
         "bayesian_move": bayesian_move,
         "markov_move": markov_move,
         "monte_carlo_move": monte_carlo_move,
@@ -460,9 +471,11 @@ def predict_next_move(user_id):
     # 🔥 Menghapus strategi yang bernilai None
     active_strategies = {key: value for key, value in active_strategies.items() if value is not None}
 
-    # 🔥 Prioritaskan strategi anti-siklik jika aktif
-    if "cycle_disruption" in active_strategies:
-        return active_strategies["cycle_disruption"]
+    # 🔥 Jika ada strategi anti-siklik, AI akan langsung menggunakannya
+    if "advanced_cycle_disruption" in active_strategies:
+        return active_strategies["advanced_cycle_disruption"]
+    if "meta_prediction" in active_strategies:
+        return active_strategies["meta_prediction"]
 
     # 🔥 Jika ada strategi lain yang aktif, gunakan voting berbobot
     if active_strategies:
@@ -472,6 +485,7 @@ def predict_next_move(user_id):
 
     # 🔥 Jika tidak ada strategi aktif, AI memilih secara acak
     return random.choice(["batu", "gunting", "kertas"])
+
 
 
 # **6️⃣ API Play Game**
