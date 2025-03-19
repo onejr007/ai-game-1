@@ -7,6 +7,11 @@ import time
 import threading
 import os
 import numpy as np
+import logging
+import sys
+import orjson
+import functools
+
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -14,19 +19,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from collections import defaultdict
-from filelock import FileLock
+from filelock import FileLock, Timeout
 from apscheduler.schedulers.background import BackgroundScheduler
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Ganti dengan domain yang diizinkan, contoh: ["http://localhost:3000"]
-    allow_credentials=True,
-    allow_methods=["*"],  # Izinkan semua metode (POST, GET, OPTIONS, dll.)
-    allow_headers=["*"],
-)
+from strategi import STRATEGY_FUNCTIONS
 
 # 🔐 Konfigurasi Keamanan
 SECRET_KEY = "supersecretkey"
@@ -36,35 +36,21 @@ blacklisted_tokens = set()
 # 📂 File JSON
 USER_DATA_FILE = "datalogin.json"
 STATS_DATA_FILE = "datastatistik.json"
+POLA_DATA_FILE = "datapola.json"
 
-# Mount folder static untuk frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# 📥 Fungsi Baca & Tulis JSON dengan File Lock
-def read_json(file, default_data=None):
-    lock = FileLock(file + ".lock")
-    with lock:
-        if not os.path.exists(file):
-            write_json(file, default_data if default_data is not None else {})
-        try:
-            with open(file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            write_json(file, default_data if default_data is not None else {})
-            return default_data if default_data is not None else {}
-
-def write_json(file, data):
-    lock = FileLock(file + ".lock")
-    with lock:
-        with open(file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4)
-
-# Fungsi untuk memastikan file JSON selalu ada
-def initialize_json_files():
-    read_json(USER_DATA_FILE, default_data={})
-    read_json(STATS_DATA_FILE, default_data={})
-
-initialize_json_files()
+label_encoder = LabelEncoder()
+# Buat filter untuk menyaring request tertentu
+class SuppressEndpointsFilter(logging.Filter):
+    def filter(self, record):
+        return all(endpoint not in record.getMessage() for endpoint in ["/play", "/","/leaderboard", "/ai_stats"])
+    
+class ProcessTimeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
 
 # Model untuk User
 class UserRegister(BaseModel):
@@ -75,10 +61,84 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Ganti dengan domain yang diizinkan, contoh: ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],  # Izinkan semua metode (POST, GET, OPTIONS, dll.)
+    allow_headers=["*"],
+)
+app.add_middleware(ProcessTimeMiddleware)
+
+# Mount folder static untuk frontend
+app.mount("/static", StaticFiles(directory="static"), name="static")
+# Konfigurasi logging
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG,  # 🔥 Pastikan level DEBUG aktif
+    handlers=[logging.StreamHandler(sys.stdout)]  # 🔥 Paksa log muncul di console Windows
+)
+
+logger = logging.getLogger(__name__)
+
+# Terapkan filter ke logger Uvicorn Access
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.addFilter(SuppressEndpointsFilter())
+
+# Logging lebih cepat dengan NullHandler untuk komponen tidak penting
+logging.getLogger("filelock").addHandler(logging.NullHandler())
+logging.getLogger("filelock").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+logging.getLogger("uvicorn").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").propagate = False
+
+logger.info(f"🔥 APP STARTED !")
+sys.stdout.flush()  # 🔥 Paksa agar log langsung tampil
+
+# 📥 Fungsi Baca & Tulis JSON dengan File Lock dan optimasi kecepatan
+def read_json(file, default_data=None):
+    lock = FileLock(file + ".lock")
+
+    try:
+        with lock.acquire(timeout=2):  # Timeout lebih cepat untuk menghindari deadlock
+            if not os.path.exists(file):
+                write_json(file, {} if default_data is None else dict(default_data))
+
+            with open(file, "rb") as f:  # Mode 'rb' lebih cepat
+                return orjson.loads(f.read())
+
+    except (orjson.JSONDecodeError, FileNotFoundError):
+        print(f"⚠️ File {file} rusak atau tidak ditemukan. Membuat ulang...")
+        write_json(file, {} if default_data is None else dict(default_data))
+        return {} if default_data is None else dict(default_data)
+
+    except Timeout:
+        print(f"❌ Timeout: Gagal mengunci {file}, melewati operasi ini.")
+        return {} if default_data is None else dict(default_data)
+
+def write_json(file, data):
+    lock = FileLock(file + ".lock")
+
+    try:
+        with lock.acquire(timeout=2):  # Hindari deadlock dengan timeout kecil
+            with open(file, "wb") as f:  # Gunakan 'wb' untuk menulis lebih cepat
+                f.write(orjson.dumps(data))  # orjson lebih cepat daripada json
+    except Timeout:
+        print(f"❌ Timeout: Gagal mengunci {file}, operasi dilewati!")
+
+# 📌 Pastikan file JSON selalu ada
+def initialize_json_files():
+    read_json(USER_DATA_FILE, default_data={})
+    read_json(STATS_DATA_FILE, default_data={})
+    read_json(POLA_DATA_FILE, default_data={})
+
+initialize_json_files()
+
 
 # **1️⃣ API Halaman Utama (Menyajikan index.html)**
 @app.get("/", response_class=HTMLResponse)
-def serve_frontend():
+async def serve_frontend():
     try:
         with open("static/index.html", "r", encoding="utf-8") as file:
             return HTMLResponse(content=file.read())
@@ -86,7 +146,7 @@ def serve_frontend():
         raise HTTPException(status_code=404, detail="File index.html tidak ditemukan.")
 
 # **2️⃣ Middleware untuk Mendapatkan User dari Token**
-def get_current_user(request: Request):
+async def get_current_user(request: Request):
     token = request.headers.get("Authorization")
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
@@ -112,7 +172,7 @@ scheduler.start()
 
 # **3️⃣ API Register User**
 @app.post("/register")
-def register(user: UserRegister):
+async def register(user: UserRegister):
     users = read_json(USER_DATA_FILE)
 
     if user.username in users:
@@ -132,7 +192,7 @@ def register(user: UserRegister):
 
 # **4️⃣ API Login User & Dapatkan Token**
 @app.post("/login")
-def login(user: UserLogin):
+async def login(user: UserLogin):
     users = read_json(USER_DATA_FILE)
 
     if user.username not in users:
@@ -147,381 +207,127 @@ def login(user: UserLogin):
     return JSONResponse(content={"token": token})
 
 # **5️⃣ AI Learning: Prediksi Berdasarkan Data User**
+# 🔹 Fungsi mengenali pola dari history pemain
+def detect_pattern(moves, max_length=15):
+    for length in range(3, max_length + 1):
+        if len(moves) >= length * 2 and moves[-length:] == moves[-(length * 2):-length]:
+            return "".join(moves[-length:])
+    return None
+
+# 🔹 Fungsi validasi best move berdasarkan hasil sebelumnya
+def validate_best_move(user_id, pola_str, move):
+    stats = read_json(STATS_DATA_FILE)
+    
+    if user_id not in stats or "history" not in stats[user_id]:
+        return True  # Jika tidak ada history, anggap valid
+    
+    history = stats[user_id]["history"]
+    recent_results = [h["result"] for h in history[-10:]]
+    
+    # Jika dalam 10 game terakhir lebih banyak kalah, jangan gunakan move ini
+    if recent_results.count("Kalah") > recent_results.count("Menang"):
+        return False
+    return True
+
+# 🔹 Fungsi menyimpan pola baru jika belum ada
+def save_pattern(user_id, pola_str):
+    data_pola = read_json(POLA_DATA_FILE)
+
+    if pola_str not in data_pola:
+        data_pola[pola_str] = {}
+
+    write_json(POLA_DATA_FILE, data_pola)
+
+# 🔹 Fungsi update daftar user yang dikalahkan pada pola tertentu
+def update_users_defeated(user_id, pola_str, strategy, result):
+    data_pola = read_json(POLA_DATA_FILE)
+
+    if pola_str not in data_pola:
+        data_pola[pola_str] = {}
+
+    if strategy not in data_pola[pola_str]:
+        data_pola[pola_str][strategy] = {}
+
+    if user_id not in data_pola[pola_str][strategy]:
+        data_pola[pola_str][strategy][user_id] = {"wins": 0, "losses": 0}
+
+    if result == "Menang":
+        data_pola[pola_str][strategy][user_id]["wins"] += 1
+    elif result == "Kalah":
+        data_pola[pola_str][strategy][user_id]["losses"] += 1
+
+    write_json(POLA_DATA_FILE, data_pola)
+
+# 🔹 Fungsi utama prediksi move AI
 def predict_next_move(user_id):
     stats = read_json(STATS_DATA_FILE)
-
+    
     if user_id not in stats or "history" not in stats[user_id] or len(stats[user_id]["history"]) < 5:
-        return random.choice(["batu", "gunting", "kertas"])
+        return random.choice(["batu", "gunting", "kertas"])  # Jika data minim, pilih acak
     
     history = stats[user_id]["history"]
     recent_moves = [h["user_move"] for h in history[-150:]]
     recent_results = [h["result"] for h in history[-150:]]
-    timestamps = [h.get("timestamp", 0) for h in history[-150:]]  # ✅ FIXED
-
-
-    counter_moves = {"batu": "kertas", "gunting": "batu", "kertas": "gunting"}
-
-
-    # ✅ 1️⃣ Pattern Recognition (Ditingkatkan)
-    def detect_pattern(moves, max_length=15):  # 🔥 Bisa mendeteksi pola hingga 15 langkah
-        for length in range(3, max_length + 1):  
-            if len(moves) >= length * 2 and moves[-length:] == moves[-(length * 2):-length]:
-                return counter_moves[moves[-1]]
-        return None
-    pattern_move = detect_pattern(recent_moves)
-
-    # ✅ 2️⃣ Bayesian Learning
-    move_counts = {move: recent_moves.count(move) for move in ["batu", "gunting", "kertas"]}
-    bayesian_move = counter_moves[max(move_counts, key=move_counts.get)]
-
-    # ✅ 3️⃣ Markov Chain Learning
-    if len(recent_moves) >= 3:
-        transition_counts = defaultdict(lambda: defaultdict(int))
-        for i in range(len(recent_moves) - 1):
-            transition_counts[recent_moves[i]][recent_moves[i + 1]] += 1
-        last_move = recent_moves[-1]
-        markov_move = counter_moves[max(transition_counts[last_move], key=transition_counts[last_move].get, default=random.choice(["batu", "gunting", "kertas"]))]
-    else:
-        markov_move = None
-
-    # ✅ 4️⃣ Monte Carlo + Dynamic Simulation
-    def monte_carlo_simulation():
-        move_scores = {move: 0 for move in ["batu", "gunting", "kertas"]}
-        for _ in range(5000):
-            ai_move = random.choice(["batu", "gunting", "kertas"])
-            if ai_move == counter_moves[bayesian_move]:
-                move_scores[ai_move] += 1
-        return max(move_scores, key=move_scores.get)
-    monte_carlo_move = monte_carlo_simulation()
-
-    # ✅ 5️⃣ Time-Based Pattern Recognition
-    def filter_recent_moves(history, time_window=300):
-        current_time = time.time()
-        return [move for i, move in enumerate(history) if timestamps[i] >= current_time - time_window]
-    time_based_move = detect_pattern(filter_recent_moves(recent_moves))
-
-    # ✅ 6️⃣ Game-Theoretic Equilibrium
-    equilibrium_move = counter_moves[random.choice(["batu", "gunting", "kertas"])]
-
-    # ✅ 7️⃣ Bayesian Neural Estimation
-    def bayesian_neural_prediction():
-        transition_matrix = np.zeros((3, 3))
-        move_map = {"batu": 0, "gunting": 1, "kertas": 2}
-
-        for i in range(len(recent_moves) - 1):
-            prev_move = move_map[recent_moves[i]]
-            next_move = move_map[recent_moves[i + 1]]
-            transition_matrix[prev_move][next_move] += 1
-
-        probabilities = transition_matrix / (np.sum(transition_matrix, axis=1, keepdims=True) + 1e-9)
-        predicted_move = np.argmax(probabilities[move_map[recent_moves[-1]]])
-
-        return counter_moves[list(move_map.keys())[predicted_move]]
-    neural_move = bayesian_neural_prediction()
-
-    # ✅ 8️⃣ Multi-Tier Voting System
-    def multi_tier_voting():
-        short_term = recent_moves[-5:] if len(recent_moves) >= 5 else recent_moves
-        mid_term = recent_moves[-20:] if len(recent_moves) >= 20 else recent_moves
-        long_term = recent_moves
-
-        tier_1 = counter_moves[max(set(short_term), key=short_term.count)]
-        tier_2 = counter_moves[max(set(mid_term), key=mid_term.count)]
-        tier_3 = counter_moves[max(set(long_term), key=long_term.count)]
-
-        return random.choice([tier_1, tier_2, tier_3])
-    tiered_move = multi_tier_voting()
-
-    # ✅ 9️⃣ Reverse Exploit Strategy
-    if len(recent_moves) >= 2 and recent_moves[-2] == counter_moves[recent_moves[-1]]:
-        reverse_exploit = counter_moves[recent_moves[-1]]
-    else:
-        reverse_exploit = None
-
-    # ✅ 🔟 Anti-Mirror Strategy
-    if len(recent_moves) >= 2 and recent_moves[-2] == counter_moves[recent_moves[-1]]:
-        anti_mirror = counter_moves[recent_moves[-1]]
-    else:
-        anti_mirror = None
-
-    # ✅ 1️⃣1️⃣ Streak-Based Prediction
-    if len(recent_results) >= 5:
-        win_streak = recent_results[-5:].count("Menang")
-        lose_streak = recent_results[-5:].count("Kalah")
-
-        if win_streak >= 4:
-            streak_prediction = counter_moves[recent_moves[-1]]
-        elif lose_streak >= 4:
-            streak_prediction = random.choice(["batu", "gunting", "kertas"])
-        else:
-            streak_prediction = None
-    else:
-        streak_prediction = None
-
-    # ✅ 1️⃣2️⃣ Look-Ahead Simulation
-    def look_ahead_simulation():
-        simulated_moves = [counter_moves[recent_moves[-1]]]
-        for _ in range(2):
-            simulated_moves.append(counter_moves[simulated_moves[-1]])
-        return simulated_moves[-1]
-    look_ahead = look_ahead_simulation()
-
-    # ✅ 1️⃣3️⃣ Psychological Counterplay
-    if len(recent_results) >= 6 and recent_results[-6:].count("Menang") >= 4:
-        psychological_counter = counter_moves[recent_moves[-1]]
-    else:
-        psychological_counter = None
-
-    # ✅ 1️⃣4️⃣ Hybrid AI Switching
-    if len(recent_results) >= 10:
-        win_rate = recent_results[-10:].count("Menang") / 10
-        if win_rate < 0.4:
-            hybrid_switch = counter_moves[recent_moves[-1]]
-        else:
-            hybrid_switch = random.choice(["batu", "gunting", "kertas"])
-    else:
-        hybrid_switch = None
-
-    # ✅ 1️⃣5️⃣ Opponent Conditioning
-    if len(recent_results) >= 6 and recent_results[-6:].count("Kalah") >= 4:
-        conditioning = counter_moves[recent_moves[-1]]
-    else:
-        conditioning = None
-
-    # ✅ 1️⃣6️⃣ Dynamic Response Adjustment
-    if len(recent_results) >= 8:
-        recent_win_rate = recent_results[-8:].count("Menang") / 8
-        if recent_win_rate < 0.5:
-            dynamic_response = counter_moves[recent_moves[-1]]
-        else:
-            dynamic_response = random.choice(["batu", "gunting", "kertas"])
-    else:
-        dynamic_response = None
-
-    # ✅ 1️⃣7️⃣ Entropy-Based Decision Making
-    if len(recent_moves) >= 5:
-        move_distribution = {move: recent_moves[-5:].count(move) for move in ["batu", "gunting", "kertas"]}
-        most_common_move = max(move_distribution, key=move_distribution.get)
-        entropy_move = counter_moves[most_common_move]
-    else:
-        entropy_move = None
-
-    # ✅ 1️⃣8️⃣ Gradient Learning Strategy
-    if len(recent_moves) >= 6:
-        recent_trend = [move for move in recent_moves[-6:]]
-        if recent_trend == ["batu", "gunting", "kertas", "batu", "gunting", "kertas"]:
-            gradient_learning = counter_moves[recent_moves[-1]]
-        else:
-            gradient_learning = None
-    else:
-        gradient_learning = None
-
-    # ✅ 1️⃣9️⃣ Reinforcement Learning Adaptation
-    if len(recent_results) >= 10:
-        ai_win_rate = recent_results[-10:].count("Menang") / 10
-        if ai_win_rate < 0.4:
-            reinforcement_learning = counter_moves[recent_moves[-1]]
-        else:
-            reinforcement_learning = random.choice(["batu", "gunting", "kertas"])
-    else:
-        reinforcement_learning = None
-
-    # ✅ 2️⃣0️⃣ Exploration vs. Exploitation
-    if len(recent_results) >= 10:
-        ai_win_rate = recent_results[-10:].count("Menang") / 10
-        if ai_win_rate < 0.5:
-            exploration_exploitation = counter_moves[recent_moves[-1]]
-        else:
-            exploration_exploitation = random.choice(["batu", "gunting", "kertas"])
-    else:
-        exploration_exploitation = None
-
-    # ✅ 2️⃣1️⃣ Neural Network-Based Decision Making
-    if trained_model:
-        input_data = np.array([[recent_moves.count("batu"), recent_moves.count("gunting"), recent_moves.count("kertas")]])
-        predicted_move = trained_model.predict(input_data).item()
-        neural_network_move = counter_moves[predicted_move]
-    else:
-        neural_network_move = None
-
-    # ✅ 2️⃣2️⃣ Recursive Bayesian Updating
-    if len(recent_moves) >= 5:
-        move_probs = {move: (recent_moves[-5:].count(move) + 1) / 6 for move in ["batu", "gunting", "kertas"]}
-        predicted_move = max(move_probs, key=move_probs.get)
-        recursive_bayesian = counter_moves[predicted_move]
-    else:
-        recursive_bayesian = None
-
-    # ✅ 2️⃣3️⃣ Look-Back Analysis
-    if len(recent_moves) >= 10:
-        most_frequent_move = max(set(recent_moves[-10:]), key=recent_moves[-10:].count)
-        look_back_analysis = counter_moves[most_frequent_move]
-    else:
-        look_back_analysis = None
-
-    # ✅ 2️⃣4️⃣ Delayed Counter Strategy
-    if len(recent_moves) >= 4:
-        delayed_counter = counter_moves[recent_moves[-4]]
-    else:
-        delayed_counter = None
-
-    # ✅ 2️⃣5️⃣ Move Distribution Analysis
-    if len(recent_moves) >= 10:
-        move_distribution = {move: recent_moves.count(move) / len(recent_moves) for move in ["batu", "gunting", "kertas"]}
-        predicted_move = max(move_distribution, key=move_distribution.get)
-        move_distribution_analysis = counter_moves[predicted_move]
-    else:
-        move_distribution_analysis = None
-
-    # ✅ 2️⃣6️⃣ Weighted Random Selection
-    if len(recent_moves) >= 5:
-        move_weights = {move: recent_moves[-5:].count(move) + 1 for move in ["batu", "gunting", "kertas"]}
-        weighted_choices = random.choices(list(move_weights.keys()), weights=move_weights.values(), k=1)
-        weighted_random_selection = counter_moves[weighted_choices[0]]
-    else:
-        weighted_random_selection = None
-
-    # ✅ 2️⃣7️⃣ Meta-Learning Strategy
-    if len(recent_results) >= 15:
-        win_rate = recent_results[-15:].count("Menang") / 15
-        if win_rate < 0.4:
-            meta_learning = counter_moves[recent_moves[-1]]
-        else:
-            meta_learning = random.choice(["batu", "gunting", "kertas"])
-    else:
-        meta_learning = None
-
-    # ✅ 2️⃣8️⃣ Adaptive Randomization
-    if random.random() < 0.2:
-        adaptive_randomization = random.choice(["batu", "gunting", "kertas"])
-    else:
-        adaptive_randomization = None
-
-    # ✅ 2️⃣9️⃣ Probability Curve Prediction
-    if len(recent_moves) >= 10:
-        move_probabilities = {move: (recent_moves.count(move) + 1) / (len(recent_moves) + 3) for move in ["batu", "gunting", "kertas"]}
-        predicted_move = max(move_probabilities, key=move_probabilities.get)
-        probability_curve_prediction = counter_moves[predicted_move]
-    else:
-        probability_curve_prediction = None
-
-    # ✅ 3️⃣0️⃣ AI Self-Optimization
-    if len(recent_results) >= 20:
-        ai_win_rate = recent_results[-20:].count("Menang") / 20
-        if ai_win_rate < 0.5:
-            ai_self_optimization = counter_moves[recent_moves[-1]]
-        else:
-            ai_self_optimization = random.choice(["batu", "gunting", "kertas"])
-    else:
-        ai_self_optimization = None
-
-    # ✅ 3️⃣1️⃣ Advanced Cycle Disruption (Strategi Baru)
-    def detect_advanced_cycle(moves):
-        cycle_lengths = [3, 4, 5, 6]  # 🔥 Coba deteksi siklus dengan berbagai panjang
-        for length in cycle_lengths:
-            if len(moves) >= length * 3:  # 🔥 Pastikan ada cukup data untuk mendeteksi pola
-                if moves[-length:] == moves[-(2 * length):-length] == moves[-(3 * length):-(2 * length)]:
-                    return counter_moves[moves[-1]]  # 🔥 AI memutus siklus dengan memilih counter
-        return None
-    advanced_cycle_disruption = detect_advanced_cycle(recent_moves)
     
-    # ✅ 3️⃣2️⃣ Meta-Prediction Strategy (Strategi Baru)
-    if len(recent_moves) >= 20:
-        last_10_moves = recent_moves[-10:]  # 🔥 Lihat 10 langkah terakhir user
-        most_frequent_move = max(set(last_10_moves), key=last_10_moves.count)
-        meta_prediction = counter_moves[most_frequent_move]  # 🔥 Counter langkah yang paling sering dipakai
+    # 🔍 1️⃣ Mencari pola history pemain
+    pola_str = detect_pattern(recent_moves)
+    
+    if not pola_str:
+        pola_str = "".join(recent_moves[-3:])  # Gunakan pola 3 langkah terakhir jika tidak ada pola berulang
+    
+    # 🔄 Simpan pola baru jika belum ada
+    save_pattern(user_id, pola_str)
+
+    # 📥 Baca strategi dari datapola.json
+    pola_data = read_json(POLA_DATA_FILE)
+    strategi_terpilih = []
+
+    if pola_str in pola_data:
+        strategi_terpilih = list(pola_data[pola_str].keys())  # Gunakan strategi yang sudah ada
     else:
-        meta_prediction = None
+        strategi_terpilih = ["random_choice"]  # Jika tidak ada strategi, gunakan random_choice
+    
+    # 📊 2️⃣ Gunakan strategi yang tersedia dan hitung voting move
+    move_votes = defaultdict(int)
+    
+    for strategi in strategi_terpilih:
+        if strategi in STRATEGY_FUNCTIONS:
+            move = STRATEGY_FUNCTIONS[strategi](recent_moves)
+            if move:
+                move_votes[move] += 1
 
-    # ✅ 3️⃣3️⃣ Infinite Cycle Detection
-    def detect_infinite_cycle(moves, cycle_length=3):
-        if len(moves) >= cycle_length * 4:  # Pastikan ada cukup data untuk mendeteksi pola panjang
-            last_cycles = [moves[-(cycle_length * i): -(cycle_length * (i - 1))] for i in range(1, 4)]
-            if all(cycle == last_cycles[0] for cycle in last_cycles):
-                return counter_moves[moves[-1]]  # AI langsung memutus pola yang terus berulang
-        return None
-    infinite_cycle_move = detect_infinite_cycle(recent_moves)
-
-    # ✅ 3️⃣4️⃣ Cycle Breaker Strategy
-    if len(recent_moves) >= 9:  # Pastikan ada cukup data
-        if recent_moves[-9:] == recent_moves[-18:-9]:  # Jika 9 langkah terakhir sama dengan sebelumnya
-            cycle_breaker = counter_moves[recent_moves[-1]]  # AI memutus pola
-        else:
-            cycle_breaker = None
+    # 🎯 3️⃣ Memilih move terbaik berdasarkan voting strategi
+    if move_votes:
+        best_move = max(move_votes, key=move_votes.get)
     else:
-        cycle_breaker = None
+        best_move = random.choice(["batu", "gunting", "kertas"])
 
-    # 🔥 Mengumpulkan semua strategi yang memiliki nilai
-    active_strategies = {
-        "pattern_move": pattern_move,
-        "infinite_cycle_move": infinite_cycle_move,
-        "cycle_breaker": cycle_breaker,
-        "advanced_cycle_disruption": advanced_cycle_disruption,
-        "meta_prediction": meta_prediction,
-        "bayesian_move": bayesian_move,
-        "markov_move": markov_move,
-        "monte_carlo_move": monte_carlo_move,
-        "time_based_move": time_based_move,
-        "equilibrium_move": equilibrium_move,
-        "neural_move": neural_network_move,
-        "tiered_move": tiered_move,
-        "reverse_exploit": reverse_exploit,
-        "anti_mirror": anti_mirror,
-        "streak_prediction": streak_prediction,
-        "look_ahead": look_ahead,
-        "psychological_counter": psychological_counter,
-        "hybrid_switch": hybrid_switch,
-        "conditioning": conditioning,
-        "dynamic_response": dynamic_response,
-        "entropy_move": entropy_move,
-        "gradient_learning": gradient_learning,
-        "reinforcement_learning": reinforcement_learning,
-        "exploration_exploitation": exploration_exploitation,
-        "recursive_bayesian": recursive_bayesian,
-        "look_back_analysis": look_back_analysis,
-        "delayed_counter": delayed_counter,
-        "move_distribution_analysis": move_distribution_analysis,
-        "weighted_random_selection": weighted_random_selection,
-        "meta_learning": meta_learning,
-        "adaptive_randomization": adaptive_randomization,
-        "probability_curve_prediction": probability_curve_prediction,
-        "ai_self_optimization": ai_self_optimization
-    }
+    # ✅ 4️⃣ Validasi best move sebelum digunakan
+    if not validate_best_move(user_id, pola_str, best_move):
+        sorted_votes = sorted(move_votes.items(), key=lambda x: x[1], reverse=True)
+        best_move = sorted_votes[1][0] if len(sorted_votes) > 1 else random.choice(["batu", "gunting", "kertas"])
 
-    # 🔥 Hapus strategi yang bernilai None
-    active_strategies = {key: value for key, value in active_strategies.items() if value is not None}
+    # 🔄 5️⃣ Update daftar user yang dikalahkan dalam pola ini
+    hasil_game_terakhir = history[-1]["result"] if history else "Kalah"
+    update_users_defeated(user_id, pola_str, best_move, hasil_game_terakhir)
 
-    # 🔥 Debugging: Tampilkan strategi yang tersedia
-    print(f"🔍 [DEBUG] Strategi Aktif: {list(active_strategies.keys())}")
-
-    # 🔥 Jika ada strategi anti-siklik, AI akan langsung menggunakannya
-    if "infinite_cycle_move" in active_strategies:
-        return active_strategies["infinite_cycle_move"]
-    if "cycle_breaker" in active_strategies:
-        return active_strategies["cycle_breaker"]
-    if "advanced_cycle_disruption" in active_strategies:
-        return active_strategies["advanced_cycle_disruption"]
-    if "meta_prediction" in active_strategies:
-        return active_strategies["meta_prediction"]
-
-    # 🔥 Jika ada strategi lain yang aktif, gunakan voting berbobot
-    if active_strategies:
-        strategy_weights = {key: 1 for key in active_strategies}
-        chosen_strategy = max(active_strategies, key=lambda k: strategy_weights[k])
-        return active_strategies[chosen_strategy]
-
-    # 🔥 Jika tidak ada strategi aktif, AI memilih secara acak
-    return random.choice(["batu", "gunting", "kertas"])
-
-
+    return best_move
 
 # **6️⃣ API Play Game**
 @app.post("/play")
-def play(request: Request, user_choice: str, current_user: str = Depends(get_current_user)):
+async def play(request: Request, user_choice: str, current_user: str = Depends(get_current_user)):
+    logger.info(f"🛠️ [DEBUG] User {current_user} memilih: {user_choice}")
+    sys.stdout.flush()  # 🔥 Paksa agar log langsung muncul di Windows console
+
     if user_choice not in ["batu", "gunting", "kertas"]:
         raise HTTPException(status_code=400, detail="Invalid choice")
 
     ai_choice = predict_next_move(current_user)
+
+    # 🔥 Debugging: Tampilkan strategi yang tersedia
+    logger.info(f"🛠️ [DEBUG] Hasil : {ai_choice}")
+    sys.stdout.flush()  # 🔥 Paksa agar log langsung tampil
+
     result = "Seri" if user_choice == ai_choice else (
         "Menang" if (user_choice == "batu" and ai_choice == "gunting") or 
                     (user_choice == "gunting" and ai_choice == "kertas") or 
@@ -573,7 +379,7 @@ def play(request: Request, user_choice: str, current_user: str = Depends(get_cur
 
 # **7️⃣ API Leaderboard dengan Win Rate (%)**
 @app.get("/leaderboard")
-def leaderboard():
+async def leaderboard():
     stats = read_json(STATS_DATA_FILE)
     
     leaderboard_data = []
@@ -599,7 +405,7 @@ def leaderboard():
 
 # **8️⃣ API Cek Statistik AI**
 @app.get("/ai_stats")
-def ai_statistics():
+async def ai_statistics():
     stats = read_json(STATS_DATA_FILE)
 
     total_users = len(stats)  # Hitung jumlah user yang ada dalam data
@@ -629,7 +435,7 @@ def ai_statistics():
 
 # **9️⃣ API Reset Statistik Pemain**
 @app.post("/reset_stats")
-def reset_stats(current_user: str = Depends(get_current_user)):
+async def reset_stats(current_user: str = Depends(get_current_user)):
     stats = read_json(STATS_DATA_FILE)
     stats[current_user] = {"total_games": 0, "total_wins": 0, "total_losses": 0, "total_draws": 0, "score": 0, "win_streak": 0, "history": []}
     write_json(STATS_DATA_FILE, stats)
@@ -707,30 +513,9 @@ def get_global_move_distribution():
 
     return counter_moves[most_used]
 
-# 🤖 Training AI Neural Network
-def train_ai_model():
-    stats = read_json(STATS_DATA_FILE)
-    X, y = [], []
-
-    for user, data in stats.items():
-        history = data.get("history", [])
-        for i in range(len(history) - 1):
-            # **Cek apakah 'user_move' ada dalam history**
-            if "user_move" in history[i] and "user_move" in history[i + 1]:
-                X.append([history[i]["user_move"]])
-                y.append(history[i + 1]["user_move"])
-
-    if len(X) > 5:
-        model = RandomForestClassifier(n_estimators=10)
-        model.fit(np.array(X).reshape(-1, 1), np.array(y))
-        return model
-    return None
-
-trained_model = train_ai_model()
-
 # 🔑 Logout & Token Blacklist
 @app.post("/logout")
-def logout(request: Request):
+async def logout(request: Request):
     token = request.headers.get("Authorization")
     if token:
         token = token.split(" ")[1]

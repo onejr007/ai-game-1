@@ -1,4 +1,6 @@
 -e "env/\nvenv/" 
 env/ 
+venv/
 datalogin.json
+datapola.json
 datastatistik.json 
