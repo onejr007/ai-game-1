@@ -1,4 +1,4 @@
-# **Deskripsi Proyek: AI Batu Gunting Kertas**  
+# **Batu Gunting Kertas AI**  
 
 🔗 **URL Aplikasi:** [AI Game](https://ai-game-1-production.up.railway.app/)  
 
